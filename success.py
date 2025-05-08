@@ -906,12 +906,12 @@ class VolatilityPredictionModels:
         plt.close(fig)
 
     def visualize_model_comparison(self,
-                                 evaluations: List[Dict[str, float]],
-                                 symbol: str,
-                                 target_col: str,
-                                 metric: str = 'rmse',
-                                 save: bool = True,
-                                 show: bool = False) -> None:
+                                   evaluations: List[Dict[str, float]],
+                                   symbol: str,
+                                   target_col: str,
+                                   metric: str = 'rmse',
+                                   save: bool = True,
+                                   show: bool = False) -> None:
         """
         可视化不同模型性能比较。
 
@@ -937,16 +937,52 @@ class VolatilityPredictionModels:
             title_prefix = "Higher is better"
 
         fig = plt.figure(figsize=(12, 6))
+
+        # 决定是否使用对数刻度
+        use_log_scale = False
+        if metric in ['rmse', 'mse', 'mae']:
+            # 检查值的范围，如果最大值和最小值比例超过100，使用对数刻度
+            max_val = max(metric_values)
+            min_val = min(metric_values)
+            if max_val / (min_val + 1e-10) > 100:  # 防止除以0
+                use_log_scale = True
+
+        # 创建条形图
         bars = plt.bar(models, metric_values, color=colors)
 
-        # 在每个条形上方添加数值
+        # 在每个条形上方添加数值，使用科学计数法和更高精度
         for i, bar in enumerate(bars):
             height = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2., height + 0.002,
-                    f'{metric_values[i]:.6f}',
-                    ha='center', va='bottom', rotation=0)
 
-        plt.title(f'{symbol} {target_col} {metric.upper()} Comparison ({title_prefix})', fontsize=14)
+            # 根据数值大小选择合适的格式化方式
+            if metric_values[i] < 0.001:
+                # 非常小的值使用科学计数法
+                value_text = f'{metric_values[i]:.10e}'
+            else:
+                # 较大的值使用10位小数
+                value_text = f'{metric_values[i]:.10f}'
+
+            # 计算文本位置
+            if use_log_scale:
+                # 对数刻度下，文本位置需要特别处理
+                text_y = height * 1.1  # 在条形上方10%位置
+            else:
+                # 线性刻度下，固定在条形上方一定距离
+                text_y = height + (max(metric_values) * 0.02)  # 最大值的2%
+
+            plt.text(bar.get_x() + bar.get_width() / 2., text_y,
+                     value_text,
+                     ha='center', va='bottom', rotation=45, fontsize=9)  # 旋转45度提高可读性
+
+        # 设置Y轴刻度
+        if use_log_scale:
+            plt.yscale('log')  # 使用对数刻度
+            plt.title(f'{symbol} {target_col} {metric.upper()} Comparison (Log Scale, {title_prefix})', fontsize=14)
+        else:
+            # 确保Y轴有合适的最小值，让所有条形可见
+            plt.ylim(0, max(metric_values) * 1.2)  # 上限设为最大值的1.2倍
+            plt.title(f'{symbol} {target_col} {metric.upper()} Comparison ({title_prefix})', fontsize=14)
+
         plt.ylabel(f'{metric.upper()}', fontsize=12)
         plt.grid(axis='y', alpha=0.3)
         plt.tight_layout()
@@ -954,7 +990,7 @@ class VolatilityPredictionModels:
         # 保存图表
         if save:
             file_path = os.path.join(self.output_dir, 'visualizations',
-                                   f'{symbol}_{target_col}_{metric}_comparison.png')
+                                     f'{symbol}_{target_col}_{metric}_comparison.png')
             plt.savefig(file_path, dpi=100)
             print(f"Model comparison chart saved to {file_path}")
 
