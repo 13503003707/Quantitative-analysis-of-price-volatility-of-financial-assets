@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金融波动率预测系统</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Noto Sans SC for Chinese -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 浅色模式变量 */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-tertiary: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-primary: #5850ec;
+            --accent-secondary: #6875f5;
+            --accent-hover: #4c40e0;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition-speed: 0.2s;
+            --header-bg: #5850ec;
+            --header-text: #ffffff;
+            --chart-bg: #ffffff;
+            --table-header-bg: #f9fafb;
+            --table-border: #edf2f7;
+            --table-highlight: #f0f9ff;
+            --input-bg: #ffffff;
+            --input-border: #d1d5db;
+            --input-focus-border: #6875f5;
+            --input-focus-shadow: rgba(88, 80, 236, 0.15);
+            --theme-toggle-bg: #e5e7eb;
+            --theme-toggle-circle: #ffffff;
+            --theme-toggle-border: #d1d5db;
+            --highlight-outline: rgba(88, 80, 236, 0.2);
+            --placeholder-bg: #f3f4f6;
+            --history-card-bg: #f9fafb;
+            --history-card-border: #e5e7eb;
+            --history-card-active: #eef2ff;
+            --history-card-active-border: #c7d2fe;
+        }
+
+        /* 深色模式变量 */
+        [data-theme="dark"] {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --bg-tertiary: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #e5e7eb;
+            --text-tertiary: #d1d5db;
+            --border-color: #374151;
+            --accent-primary: #6875f5;
+            --accent-secondary: #818cf8;
+            --accent-hover: #5850ec;
+            --success-color: #34d399;
+            --warning-color: #fbbf24;
+            --danger-color: #f87171;
+            --info-color: #60a5fa;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.25);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+            --header-bg: #1f2937;
+            --header-text: #f9fafb;
+            --chart-bg: #1f2937;
+            --table-header-bg: #1f2937;
+            --table-border: #374151;
+            --table-highlight: #1e3a5f;
+            --input-bg: #1f2937;
+            --input-border: #4b5563;
+            --input-focus-border: #6875f5;
+            --input-focus-shadow: rgba(104, 117, 245, 0.15);
+            --theme-toggle-bg: #4b5563;
+            --theme-toggle-circle: #818cf8;
+            --theme-toggle-border: #6b7280;
+            --highlight-outline: rgba(104, 117, 245, 0.2);
+            --placeholder-bg: #1f2937;
+            --history-card-bg: #1f2937;
+            --history-card-border: #374151;
+            --history-card-active: #2d3a58;
+            --history-card-active-border: #4f65c5;
+        }
+
+        /* 基础样式 */
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background-color: var(--header-bg) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background-color var(--transition-speed);
+            padding: 0.75rem 1rem;
+        }
+
+        .navbar-brand {
+            font-weight: 500;
+            letter-spacing: -0.5px;
+            color: var(--header-text) !important;
+        }
+
+        .navbar-text {
+            color: var(--header-text) !important;
+            opacity: 0.9;
+        }
+
+        /* 主题切换开关 */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            position: relative;
+            width: 50px;
+            height: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-switch:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--theme-toggle-bg);
+            transition: 0.4s;
+            border-radius: 25px;
+            border: 1px solid var(--theme-toggle-border);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 19px;
+            width: 19px;
+            left: 3px;
+            bottom: 2px;
+            background-color: var(--theme-toggle-circle);
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .theme-icon {
+            margin: 0 8px;
+            color: var(--header-text);
+            font-size: 14px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--bg-primary);
+            box-shadow: var(--card-shadow);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed), border-color var(--transition-speed);
+            margin-bottom: 24px;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--accent-secondary);
+        }
+
+        .card-header {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0 !important;
+            font-weight: 500;
+            padding: 0.8rem 1rem;
+            color: var(--text-primary);
+            transition: background-color var(--transition-speed);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+            transition: background-color var(--transition-speed);
+        }
+
+        /* 表单元素 */
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            transition: color var(--transition-speed);
+        }
+
+        .form-control, .form-select {
+            border-radius: 6px;
+            padding: 0.6rem 0.75rem;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all var(--transition-speed);
+        }
+
+        .form-control:hover, .form-select:hover {
+            border-color: var(--accent-secondary);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--input-focus-border);
+            box-shadow: 0 0 0 3px var(--input-focus-shadow);
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .input-group-text {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--input-border);
+            color: var(--text-secondary);
+            transition: all var(--transition-speed);
+        }
+
+        .form-text {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            transition: color var(--transition-speed);
+        }
+
+        /* 开关样式 */
+        .form-check-input {
+            background-color: var(--theme-toggle-bg);
+            border-color: var(--input-border);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .form-check-label {
+            color: var(--text-primary);
+            transition: color var(--transition-speed);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            border-radius: 6px;
+            padding: 0.6rem 1rem;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-3px) !important;
+            box-shadow: 0 5px 15px rgba(88, 80, 236, 0.3) !important;
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px) !important;
+        }
+
+        .btn-primary::after {
+            content: '';
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 0.8s;
+        }
+
+        .btn-primary:active::after {
+            transform: scale(0, 0);
+            opacity: 0.3;
+            transition: 0s;
+        }
+
+        .btn-outline-primary {
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+            background-color: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--accent-primary);
+            color: white;
+            transform: translateY(-3px) !important;
+            box-shadow: 0 5px 15px rgba(88, 80, 236, 0.2) !important;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* 加载状态 */
+        .loading-spinner {
+            display: none;
+            width: 1.2rem;
+            height: 1.2rem;
+            margin-left: 8px;
+        }
+
+        #run-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* 状态消息样式 */
+        .alert {
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-speed);
+        }
+
+        .alert-light {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .alert-info {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: var(--info-color);
+        }
+
+        .alert-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        /* 结果区域样式 */
+        .results-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 图像样式 */
+        .img-fluid {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            background-color: var(--chart-bg);
+        }
+
+        .img-fluid:hover {
+            transform: scale(1.02);
+            border-color: var(--accent-secondary);
+        }
+
+        /* 标签样式 */
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.25rem;
+        }
+
+        .nav-tabs .nav-item {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease !important;
+            position: relative;
+        }
+
+        .nav-tabs .nav-link:hover {
+            border-color: var(--accent-secondary);
+            color: var(--accent-primary);
+            background-color: transparent;
+            transform: translateY(-2px) !important;
+        }
+
+        .nav-tabs .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background-color: var(--accent-primary);
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover::after {
+            width: 70%;
+            left: 15%;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active::after {
+            width: 100%;
+            left: 0;
+        }
+
+        /* 表格样式 */
+        .table {
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all var(--transition-speed);
+            color: var(--text-primary);
+        }
+
+        .table th {
+            font-weight: 500;
+            color: var(--text-primary);
+            background-color: var(--table-header-bg);
+            border-color: var(--table-border);
+        }
+
+        .table td {
+            border-color: var(--table-border);
+        }
+
+        .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: var(--bg-secondary);
+        }
+
+        .table-hover > tbody > tr:hover {
+            background-color: var(--table-highlight);
+        }
+
+        /* 徽章样式 */
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+            border-radius: 5px;
+            transition: all var(--transition-speed);
+        }
+
+        .badge-warning {
+            background-color: var(--warning-color);
+            color: var(--bg-primary);
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideNextOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-10%); opacity: 0; }
+        }
+
+        @keyframes slideNextIn {
+            from { transform: translateX(10%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slidePrevOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(10%); opacity: 0; }
+        }
+
+        @keyframes slidePrevIn {
+            from { transform: translateX(-10%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #results-area { animation: fadeIn 0.5s ease-out; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        .slide-in { animation: slideIn 0.3s ease-out forwards; }
+        .slide-next-out { animation: slideNextOut 0.6s forwards; }
+        .slide-next-in { animation: slideNextIn 0.6s forwards; }
+        .slide-prev-out { animation: slidePrevOut 0.6s forwards; }
+        .slide-prev-in { animation: slidePrevIn 0.6s forwards; }
+
+        /* 占位符样式 */
+        #results-placeholder {
+            padding: 3rem 1rem;
+            color: var(--text-tertiary);
+            background-color: var(--placeholder-bg);
+            border-radius: 8px;
+            text-align: center;
+            transition: all var(--transition-speed);
+        }
+
+        #results-placeholder i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* 信息卡片样式 */
+        .info-card {
+            background-color: var(--bg-secondary);
+            border-left: 3px solid var(--accent-primary);
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+            border-radius: 6px;
+            transition: all var(--transition-speed);
+        }
+
+        /* 进度条样式 */
+        .progress {
+            height: 4px;
+            background-color: var(--bg-tertiary);
+            margin-bottom: 1.25rem;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-animated {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            background-size: 200% 200%;
+            animation: gradientAnimation 2s linear infinite;
+        }
+
+        /* 历史记录卡片样式 */
+        .history-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .history-cards {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        .history-cards::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .history-cards::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .history-cards::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .history-card {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            background-color: var(--history-card-bg);
+            border: 1px solid var(--history-card-border);
+            cursor: pointer;
+            transition: all 0.3s ease !important;
+            position: relative;
+        }
+
+        .history-card:hover {
+            transform: translateY(-4px) !important;
+            border-color: var(--accent-secondary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .history-card.active {
+            background-color: var(--history-card-active);
+            border-color: var(--history-card-active-border);
+        }
+
+        .history-card h6 {
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .history-card p {
+            margin-bottom: 0.2rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .history-card .history-date {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 0.3rem;
+        }
+
+        .history-card .delete-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 0.75rem;
+            padding: 0.1rem 0.3rem;
+            opacity: 0;
+            transition: all 0.2s ease !important;
+        }
+
+        .history-card:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background-color: var(--danger-color) !important;
+            color: white !important;
+            transform: scale(1.1) !important;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 1.5rem 0;
+            color: var(--text-tertiary);
+        }
+
+        .clear-all-btn {
+            color: var(--danger-color);
+            background: transparent;
+            border: none;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease !important;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .clear-all-btn:hover {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+            transform: translateX(2px) !important;
+        }
+
+        /* 页脚样式 */
+        footer {
+            color: var(--text-tertiary);
+            transition: color var(--transition-speed);
+        }
+
+        /* 高亮元素效果 */
+        .highlight-on-hover:hover {
+            outline: 2px solid var(--highlight-outline);
+            transition: outline 0.2s ease;
+        }
+
+        /* 关闭提示按钮 */
+        .btn-close {
+            transition: all 0.2s ease !important;
+        }
+
+        .btn-close:hover {
+            transform: rotate(90deg) !important;
+            opacity: 1 !important;
+        }
+
+        /* 轮播图样式 */
+        .carousel {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .carousel:hover {
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .carousel-indicators {
+            bottom: -5px;
+        }
+
+        .carousel-indicators [data-bs-target] {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--accent-primary);
+            opacity: 0.5;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .carousel-indicators .active {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        .carousel-control-prev, .carousel-control-next {
+            width: 8%;
+            opacity: 0.8;
+            background: linear-gradient(90deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
+            border-radius: 8px;
+            transition: all 0.3s ease !important;
+        }
+
+        .carousel-control-next {
+            background: linear-gradient(270deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
+        }
+
+        .carousel-control-prev:hover, .carousel-control-next:hover {
+            opacity: 1 !important;
+            transform: scale(1.1) !important;
+        }
+
+        .carousel-control-prev-icon, .carousel-control-next-icon {
+            filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+        }
+
+        [data-theme="dark"] .carousel-control-prev,
+        [data-theme="dark"] .carousel-control-next {
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        }
+
+        [data-theme="dark"] .carousel-control-next {
+            background: linear-gradient(270deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .metric-title {
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            max-width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .metric-image {
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            max-height: 350px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin: 0 auto;
+        }
+
+        .metric-image:hover {
+            transform: scale(1.02);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .swipe-hint {
+            display: none;
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        /* 响应式布局优化 */
+        @media (max-width: 992px) {
+            .card-body { padding: 1rem; }
+            .btn { padding: 0.5rem 0.75rem; }
+            #results-area h3 { font-size: 1.25rem; }
+        }
+
+        @media (max-width: 768px) {
+            .img-fluid { margin-bottom: 1rem; }
+            .nav-tabs .nav-link { padding: 0.5rem 0.75rem; font-size: 0.9rem; }
+            .card-header { padding: 0.75rem 1rem; }
+            .swipe-hint { display: block; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark mb-4">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-chart-line me-2"></i>金融波动率预测系统
+            </span>
+            <div class="d-flex align-items-center">
+                <span class="navbar-text d-none d-md-block me-3">
+                    <i class="far fa-clock me-1"></i> <span id="current-date"></span>
+                </span>
+                <div class="theme-switch-wrapper">
+                    <i class="fas fa-sun theme-icon"></i>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <i class="fas fa-moon theme-icon"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <div class="row">
+            <!-- 信息提示 - 只在首次加载时显示 -->
+            <div class="col-12 mb-4">
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i><strong>欢迎使用！</strong> 04021323杨宇欣毕业设计——金融波动率预测系统前端网页
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+                </div>
+            </div>
+
+            <!-- 输入表单列 -->
+            <div class="col-lg-4 mb-4">
+                <div class="card highlight-on-hover">
+                    <div class="card-header">
+                        <i class="fas fa-sliders-h me-2"></i>预测参数设置
+                    </div>
+                    <div class="card-body">
+                        <form id="prediction-form">
+                            <div class="mb-3">
+                                <label for="symbol" class="form-label">股票/指数代码：</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control" id="symbol" name="symbol" value="{{ default_symbol }}" required placeholder="例如：^GSPC, AAPL, 000300.SS">
+                                </div>
+                                <small class="form-text"><i class="fas fa-info-circle me-1"></i>使用雅虎财经代码</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="target_window" class="form-label">目标波动率时间窗口：</label>
+                                <select class="form-select" id="target_window" name="target_window">
+                                    <option value="7" {% if default_window == 7 %}selected{% endif %}>7天窗口</option>
+                                    <option value="14" {% if default_window == 14 %}selected{% endif %}>14天窗口</option>
+                                    <option value="21" {% if default_window == 21 %}selected{% endif %}>21天窗口</option>
+                                    <option value="30" {% if default_window == 30 %}selected{% endif %}>30天窗口</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="start_date" class="form-label">开始日期：</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ default_start }}" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="end_date" class="form-label">结束日期：</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ default_end }}" required>
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mb-4">
+                                <input class="form-check-input" type="checkbox" id="optimize_params" name="optimize_params">
+                                <label class="form-check-label" for="optimize_params">
+                                    优化超参数 <span class="badge bg-warning text-dark">耗时较长</span>
+                                </label>
+                            </div>
+
+                            <button type="submit" id="run-button" class="btn btn-primary w-100" title="开始运行预测模型">
+                                <i class="fas fa-play me-2"></i>运行预测
+                                <div class="spinner-border spinner-border-sm text-light loading-spinner" role="status">
+                                    <span class="visually-hidden">加载中...</span>
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 状态/日志区域 -->
+                <div id="status-area" class="mt-4">
+                    <div id="status-message" class="alert alert-light" role="alert" style="display: none;">
+                        <!-- 状态消息显示区域 -->
+                    </div>
+                </div>
+
+                <!-- 历史记录卡片 -->
+                <div class="card mt-4 highlight-on-hover">
+                    <div class="card-header">
+                        <i class="fas fa-history me-2"></i>历史预测记录
+                    </div>
+                    <div class="card-body">
+                        <div class="history-title">
+                            <h6 class="mb-0">最近的预测</h6>
+                            <button type="button" class="clear-all-btn" id="clear-history-btn" title="清空所有历史记录">
+                                <i class="fas fa-trash-alt me-1"></i>清空
+                            </button>
+                        </div>
+                        <div class="history-cards" id="history-cards">
+                            <!-- 历史记录将在这里动态显示 -->
+                            <div class="empty-history" id="empty-history">
+                                <i class="fas fa-search mb-2"></i>
+                                <p>暂无历史记录</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 信息卡片 -->
+                <div class="info-card mt-4 highlight-on-hover">
+                    <h5><i class="fas fa-info-circle me-2"></i>关于此工具</h5>
+                    <p class="mb-2">本预测系统结合了以下技术：</p>
+                    <ul class="mb-0">
+                        <li>统计方法 (GARCH)</li>
+                        <li>机器学习 (随机森林)</li>
+                        <li>深度学习 (LSTM, Transformer)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 结果列 -->
+            <div class="col-lg-8">
+                <div id="results-area" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 id="results-title" class="mb-0"><i class="fas fa-chart-bar me-2"></i>分析结果</h3>
+                        <span class="badge bg-primary" id="results-badge">新结果</span>
+                    </div>
+                    <hr>
+
+                    <!-- 进度条（加载时显示） -->
+                    <div class="progress mb-4" id="results-progress" style="display: none;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+
+                    <!-- 导航标签 -->
+                    <ul class="nav nav-tabs" id="resultsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="plots-tab" data-bs-toggle="tab" data-bs-target="#plots-content" type="button" role="tab" aria-controls="plots-content" aria-selected="true" title="查看预测图表">
+                                <i class="fas fa-chart-line me-2"></i>可视化图表
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#metrics-content" type="button" role="tab" aria-controls="metrics-content" aria-selected="false" title="查看详细评估指标">
+                                <i class="fas fa-table me-2"></i>评估指标
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- 标签内容 -->
+                    <div class="tab-content" id="resultsTabContent">
+                        <!-- 图表标签 -->
+                        <div class="tab-pane fade show active" id="plots-content" role="tabpanel" aria-labelledby="plots-tab">
+                            <div class="results-section">
+                                <h4><i class="fas fa-analytics me-2"></i>数据分析</h4>
+                                <div class="text-center">
+                                    <img id="img-data-analysis" src="#" alt="数据分析图表" class="img-fluid" style="display: none;">
+                                    <p id="img-data-analysis-fail" style="display: none; color: var(--danger-color);">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>无法加载数据分析图表。
+                                    </p>
+                                </div>
+
+                                <h4 class="mt-4"><i class="fas fa-chart-line me-2"></i>预测比较</h4>
+                                <div class="text-center">
+                                    <img id="img-predictions" src="#" alt="预测比较图表" class="img-fluid" style="display: none;">
+                                    <p id="img-predictions-fail" style="display: none; color: var(--danger-color);">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>无法加载预测比较图表。
+                                    </p>
+                                </div>
+
+                                <h4 class="mt-4"><i class="fas fa-chart-line me-2"></i>性能指标比较</h4>
+                                <div id="metricsCarousel" class="carousel slide" data-bs-ride="false" data-bs-touch="true" data-bs-interval="false">
+                                    <!-- Carousel indicators -->
+                                    <div class="carousel-indicators">
+                                        <button type="button" data-bs-target="#metricsCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="RMSE"></button>
+                                        <button type="button" data-bs-target="#metricsCarousel" data-bs-slide-to="1" aria-label="R²"></button>
+                                        <button type="button" data-bs-target="#metricsCarousel" data-bs-slide-to="2" aria-label="MAE"></button>
+                                        <button type="button" data-bs-target="#metricsCarousel" data-bs-slide-to="3" aria-label="MSE"></button>
+                                    </div>
+
+                                    <!-- Carousel items -->
+                                    <div class="carousel-inner">
+                                        <!-- RMSE Slide -->
+                                        <div class="carousel-item active">
+                                            <div class="metric-card">
+                                                <h5 class="metric-title"><i class="fas fa-chart-bar me-2"></i>RMSE 比较 (均方根误差)</h5>
+                                                <p class="metric-description">衡量预测值与实际值的平均偏差，值越小表示模型性能越好</p>
+                                                <div class="text-center">
+                                                    <img id="img-rmse" src="#" alt="RMSE比较图表" class="img-fluid metric-image" style="display: none;">
+                                                    <p id="img-rmse-fail" style="display: none; color: var(--danger-color);">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>无法加载RMSE比较图表。
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- R² Slide -->
+                                        <div class="carousel-item">
+                                            <div class="metric-card">
+                                                <h5 class="metric-title"><i class="fas fa-chart-pie me-2"></i>R² 比较 (判定系数)</h5>
+                                                <p class="metric-description">衡量模型解释数据变异的能力，值越接近1表示模型性能越好</p>
+                                                <div class="text-center">
+                                                    <img id="img-r2" src="#" alt="R²比较图表" class="img-fluid metric-image" style="display: none;">
+                                                    <p id="img-r2-fail" style="display: none; color: var(--danger-color);">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>无法加载R²比较图表。
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- MAE Slide -->
+                                        <div class="carousel-item">
+                                            <div class="metric-card">
+                                                <h5 class="metric-title"><i class="fas fa-ruler me-2"></i>MAE 比较 (平均绝对误差)</h5>
+                                                <p class="metric-description">预测值与实际值之间绝对差值的平均值，值越小表示模型性能越好</p>
+                                                <div class="text-center">
+                                                    <img id="img-mae" src="#" alt="MAE比较图表" class="img-fluid metric-image" style="display: none;">
+                                                    <p id="img-mae-fail" style="display: none; color: var(--danger-color);">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>无法加载MAE比较图表。
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- MSE Slide -->
+                                        <div class="carousel-item">
+                                            <div class="metric-card">
+                                                <h5 class="metric-title"><i class="fas fa-square me-2"></i>MSE 比较 (均方误差)</h5>
+                                                <p class="metric-description">预测值与实际值之间差值的平方的平均值，值越小表示模型性能越好</p>
+                                                <div class="text-center">
+                                                    <img id="img-mse" src="#" alt="MSE比较图表" class="img-fluid metric-image" style="display: none;">
+                                                    <p id="img-mse-fail" style="display: none; color: var(--danger-color);">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>无法加载MSE比较图表。
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Carousel controls -->
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#metricsCarousel" data-bs-slide="prev" title="查看上一个指标">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">上一个</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#metricsCarousel" data-bs-slide="next" title="查看下一个指标">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">下一个</span>
+                                    </button>
+                                </div>
+                                <div class="swipe-hint">
+                                    <i class="fas fa-hand-pointer me-1"></i> 左右滑动查看更多指标
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 指标标签 -->
+                        <div class="tab-pane fade" id="metrics-content" role="tabpanel" aria-labelledby="metrics-tab">
+                            <div class="results-section">
+                                <h4><i class="fas fa-calculator me-2"></i>模型评估指标</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>模型</th>
+                                                <th>MAE</th>
+                                                <th>MSE</th>
+                                                <th>RMSE</th>
+                                                <th>R²</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="metrics-table-body">
+                                            <!-- 指标行将由JavaScript插入 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- 指标说明 -->
+                                <div class="card mt-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">指标解释</h5>
+                                        <ul class="mb-0">
+                                            <li><strong>MAE</strong> - 平均绝对误差（越低越好）</li>
+                                            <li><strong>MSE</strong> - 均方误差（越低越好）</li>
+                                            <li><strong>RMSE</strong> - 均方根误差（越低越好）</li>
+                                            <li><strong>R²</strong> - 判定系数（越高越好，最大值为1.0）</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- 标签内容结束 -->
+                </div> <!-- 结果区域结束 -->
+
+                <div id="results-placeholder" class="text-center text-muted mt-5" style="display: block;">
+                    <i class="fas fa-chart-line mb-3"></i>
+                    <h4>结果将显示在此处</h4>
+                    <p>输入参数并运行预测，或者从历史记录中选择已保存的预测结果</p>
+                </div>
+            </div> <!-- 结果列结束 -->
+        </div> <!-- 行结束 -->
+
+        <!-- 页脚 -->
+        <footer class="mt-5 pb-4 text-center">
+            <small>金融波动率预测系统 &copy; <span id="current-year"></span></small>
+        </footer>
+    </div> <!-- 容器结束 -->
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定义JavaScript -->
+    <script>
+        // 定义指标信息，更易于维护和扩展
+        const metricInfo = [
+            {id: 'rmse', title: 'RMSE 比较 (均方根误差)', description: '衡量预测值与实际值的平均偏差，值越小表示模型性能越好', icon: 'chart-bar'},
+            {id: 'r2', title: 'R² 比较 (判定系数)', description: '衡量模型解释数据变异的能力，值越接近1表示模型性能越好', icon: 'chart-pie'},
+            {id: 'mae', title: 'MAE 比较 (平均绝对误差)', description: '预测值与实际值之间绝对差值的平均值，值越小表示模型性能越好', icon: 'ruler'},
+            {id: 'mse', title: 'MSE 比较 (均方误差)', description: '预测值与实际值之间差值的平方的平均值，值越小表示模型性能越好', icon: 'square'}
+        ];
+
+        // 模型名称映射
+        const modelNameMap = {
+            'GARCH': { name: 'GARCH (广义自回归条件异方差)', icon: 'chart-line' },
+            'SVR': { name: 'SVR (支持向量回归)', icon: 'cogs' },
+            'Random Forest': { name: '随机森林 (Random Forest)', icon: 'tree' },
+            'RandomForest': { name: '随机森林 (Random Forest)', icon: 'tree' },
+            'LSTM': { name: 'LSTM (长短期记忆网络)', icon: 'brain' },
+            'Transformer': { name: 'Transformer (注意力机制)', icon: 'network-wired' }
+        };
+
+        // 主题切换和页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // 检查用户之前的主题偏好
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme) {
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                if (currentTheme === 'dark') {
+                    themeToggle.checked = true;
+                }
+            } else {
+                // 检查系统偏好
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeToggle.checked = true;
+                }
+            }
+
+            // 主题切换事件监听
+            themeToggle.addEventListener('change', function(e) {
+                if (e.target.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // 显示当前日期
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            const currentDate = new Date().toLocaleDateString('zh-CN', options);
+            document.getElementById('current-date').textContent = currentDate;
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+
+            // 初始化历史记录
+            loadHistoryFromStorage();
+
+            // 预测表单和历史记录管理
+            initPredictionForm();
+
+            // 添加事件处理程序，用于轮播图的滑动效果
+            const metricsCarousel = document.getElementById('metricsCarousel');
+            if (metricsCarousel) {
+                metricsCarousel.addEventListener('slide.bs.carousel', function (e) {
+                    const activeItem = this.querySelector('.active');
+                    const nextItem = e.relatedTarget;
+
+                    // 添加滑动动画类
+                    if (activeItem && nextItem) {
+                        const direction = e.direction === 'left' ? 'next' : 'prev';
+                        activeItem.classList.add('slide-' + direction + '-out');
+                        nextItem.classList.add('slide-' + direction + '-in');
+
+                        // 动画完成后移除类
+                        setTimeout(() => {
+                            activeItem.classList.remove('slide-' + direction + '-out');
+                            nextItem.classList.remove('slide-' + direction + '-in');
+                        }, 600);
+                    }
+                });
+            }
+        });
+
+        // 辅助函数：更新图像或显示错误
+        function updateImage(imgId, failId, imgUrl) {
+            const img = document.getElementById(imgId);
+            const failMsg = document.getElementById(failId);
+
+            if (imgUrl) {
+                img.src = imgUrl;
+                img.style.display = 'block';
+                failMsg.style.display = 'none';
+            } else {
+                img.style.display = 'none';
+                failMsg.style.display = 'block';
+            }
+        }
+
+        // 更新所有指标图像
+        function updateAllMetricImages(data) {
+            // 更新常规图像
+            updateImage('img-data-analysis', 'img-data-analysis-fail', data.images.data_analysis);
+            updateImage('img-predictions', 'img-predictions-fail', data.images.predictions);
+
+            // 更新指标图像 - 使用metricInfo数组简化代码
+            metricInfo.forEach(metric => {
+                updateImage(`img-${metric.id}`, `img-${metric.id}-fail`, data.images[metric.id]);
+            });
+        }
+
+        // 初始化指标轮播图
+        function initMetricsCarousel() {
+            const carousel = document.getElementById('metricsCarousel');
+            if (carousel) {
+                const bsCarousel = new bootstrap.Carousel(carousel, {
+                    interval: false,
+                    touch: true,
+                    wrap: true
+                });
+                bsCarousel.to(0);
+            }
+        }
+
+        // 更新指标表格
+        function updateMetricsTable(evaluations) {
+            const tableBody = document.getElementById('metrics-table-body');
+            tableBody.innerHTML = '';
+
+            if (!evaluations || evaluations.length === 0) {
+                return;
+            }
+
+            // 找出最佳R²的模型
+            const maxR2 = Math.max(...evaluations.map(e => e.r2));
+
+            evaluations.forEach(metric => {
+                const row = document.createElement('tr');
+
+                // 高亮最佳模型
+                if (metric.r2 === maxR2) {
+                    row.className = 'table-success';
+                }
+
+                // 创建模型名称单元格
+                const modelCell = document.createElement('td');
+                const modelInfo = modelNameMap[metric.model] || { name: metric.model, icon: 'robot' };
+
+                modelCell.innerHTML = `<i class="fas fa-${modelInfo.icon} me-2"></i>${modelInfo.name}`;
+
+                // 创建指标单元格 - 简化为一个循环
+                const cellData = [
+                    {value: metric.mae, precision: 6},
+                    {value: metric.mse, precision: 6},
+                    {value: metric.rmse, precision: 6},
+                    {value: metric.r2, precision: 6}
+                ];
+
+                // 添加第一个单元格 - 模型名
+                row.appendChild(modelCell);
+
+                // 添加所有指标单元格
+                cellData.forEach(data => {
+                    const cell = document.createElement('td');
+                    cell.textContent = data.value.toFixed(data.precision);
+                    row.appendChild(cell);
+                });
+
+                // 将行添加到表格
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 初始化预测表单提交逻辑
+        function initPredictionForm() {
+            const form = document.getElementById('prediction-form');
+            const runButton = document.getElementById('run-button');
+            const loadingSpinner = document.querySelector('.loading-spinner');
+            const statusMessage = document.getElementById('status-message');
+            const resultsArea = document.getElementById('results-area');
+            const resultsPlaceholder = document.getElementById('results-placeholder');
+            const progressBar = document.getElementById('results-progress');
+            const resultsBadge = document.getElementById('results-badge');
+
+            // 清空历史按钮点击处理
+            document.getElementById('clear-history-btn').addEventListener('click', function() {
+                if (confirm('确定要清空所有历史记录吗？此操作不可撤销。')) {
+                    localStorage.removeItem('predictionHistory');
+                    document.getElementById('history-cards').innerHTML = `
+                        <div class="empty-history" id="empty-history">
+                            <i class="fas fa-search mb-2"></i>
+                            <p>暂无历史记录</p>
+                        </div>
+                    `;
+                }
+            });
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // 显示加载状态
+                runButton.disabled = true;
+                loadingSpinner.style.display = 'inline-block';
+                statusMessage.textContent = '正在运行预测...请稍候';
+                statusMessage.className = 'alert alert-info';
+                statusMessage.style.display = 'block';
+
+                // 获取表单数据
+                const formData = {
+                    symbol: document.getElementById('symbol').value.trim(),
+                    target_window: document.getElementById('target_window').value,
+                    start_date: document.getElementById('start_date').value,
+                    end_date: document.getElementById('end_date').value,
+                    optimize_params: document.getElementById('optimize_params').checked
+                };
+
+                // 如果结果区域已经可见，显示进度条
+                if (resultsArea.style.display !== 'none') {
+                    progressBar.style.display = 'block';
+                }
+
+                // API调用
+                fetch('/run_prediction', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 隐藏加载指示器
+                    runButton.disabled = false;
+                    loadingSpinner.style.display = 'none';
+                    progressBar.style.display = 'none';
+
+                    if (data.status === 'success') {
+                        // 显示成功消息
+                        statusMessage.textContent = data.message || '预测完成！结果已生成。';
+                        statusMessage.className = 'alert alert-success';
+
+                        // 显示结果区域，隐藏占位符
+                        resultsArea.style.display = 'block';
+                        resultsPlaceholder.style.display = 'none';
+
+                        // 闪烁"新结果"徽章
+                        resultsBadge.style.display = 'inline-block';
+                        setTimeout(() => {
+                            resultsBadge.style.display = 'none';
+                        }, 3000);
+
+                        // 更新结果标题
+                        const resultTitle = `${formData.symbol} (${data.target_col}) 的分析结果`;
+                        document.getElementById('results-title').textContent = resultTitle;
+
+                        // 更新所有指标图像
+                        updateAllMetricImages(data);
+
+                        // 更新指标表格
+                        updateMetricsTable(data.evaluations);
+
+                        // 初始化轮播图
+                        initMetricsCarousel();
+
+                        // 保存到历史记录
+                        saveToHistory({
+                            id: Date.now().toString(),
+                            symbol: formData.symbol,
+                            target_window: formData.target_window,
+                            start_date: formData.start_date,
+                            end_date: formData.end_date,
+                            target_col: data.target_col,
+                            title: resultTitle,
+                            timestamp: new Date().toISOString(),
+                            images: data.images,
+                            evaluations: data.evaluations
+                        });
+                    } else {
+                        // 显示错误消息
+                        statusMessage.textContent = data.message || '发生未知错误，请检查输入参数后重试。';
+                        statusMessage.className = 'alert alert-danger';
+                    }
+                })
+                .catch(error => {
+                    console.error('预测错误:', error);
+                    runButton.disabled = false;
+                    loadingSpinner.style.display = 'none';
+                    progressBar.style.display = 'none';
+                    statusMessage.textContent = '网络请求失败，请检查网络连接后重试。';
+                    statusMessage.className = 'alert alert-danger';
+                    statusMessage.style.display = 'block';
+                });
+            });
+        }
+
+        // 从localStorage加载历史记录
+        function loadHistoryFromStorage() {
+            const historyStr = localStorage.getItem('predictionHistory');
+            if (!historyStr) return [];
+
+            try {
+                const history = JSON.parse(historyStr);
+                renderHistoryCards(history);
+                return history;
+            } catch (e) {
+                console.error('加载历史记录时出错:', e);
+                return [];
+            }
+        }
+
+        // 保存预测结果到历史记录
+        function saveToHistory(prediction) {
+            // 获取当前历史记录
+            const historyStr = localStorage.getItem('predictionHistory');
+            let history = [];
+
+            if (historyStr) {
+                try {
+                    history = JSON.parse(historyStr);
+                } catch (e) {
+                    console.error('解析历史记录时出错:', e);
+                }
+            }
+
+            // 添加新的预测记录到历史记录开头
+            history.unshift(prediction);
+
+            // 限制历史记录数量（最多保留10条）
+            if (history.length > 10) {
+                history = history.slice(0, 10);
+            }
+
+            // 保存到localStorage
+            localStorage.setItem('predictionHistory', JSON.stringify(history));
+
+            // 更新历史记录显示
+            renderHistoryCards(history);
+        }
+
+        // 根据窗口值获取标签
+        function getWindowLabel(window) {
+            const labels = {
+                '7': '7天窗口',
+                '14': '14天窗口',
+                '21': '21天窗口',
+                '30': '30天窗口'
+            };
+            return labels[window] || `${window}天窗口`;
+        }
+
+        // 渲染历史记录卡片
+        function renderHistoryCards(history) {
+            const historyCardsContainer = document.getElementById('history-cards');
+
+            // 如果没有历史记录，显示空状态
+            if (!history || history.length === 0) {
+                historyCardsContainer.innerHTML = `
+                    <div class="empty-history" id="empty-history">
+                        <i class="fas fa-search mb-2"></i>
+                        <p>暂无历史记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 清空容器
+            historyCardsContainer.innerHTML = '';
+
+            // 为每条历史记录创建卡片
+            history.forEach((prediction) => {
+                const historyCard = document.createElement('div');
+                historyCard.className = 'history-card slide-in';
+                historyCard.setAttribute('data-id', prediction.id);
+                historyCard.setAttribute('title', '点击加载此预测结果');
+
+                // 格式化时间戳
+                const timestamp = new Date(prediction.timestamp);
+                const formattedDate = timestamp.toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                // 构建卡片内容
+                historyCard.innerHTML = `
+                    <h6>${prediction.symbol} - ${getWindowLabel(prediction.target_window)}</h6>
+                    <p>${prediction.start_date} 至 ${prediction.end_date}</p>
+                    <div class="history-date">${formattedDate}</div>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-id="${prediction.id}" title="删除此记录">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+
+                // 添加点击事件以加载历史预测结果
+                historyCard.addEventListener('click', function(e) {
+                    // 如果点击的是删除按钮，不要加载历史结果
+                    if (e.target.closest('.delete-btn')) {
+                        return;
+                    }
+
+                    // 移除所有卡片的active类
+                    document.querySelectorAll('.history-card').forEach(card => {
+                        card.classList.remove('active');
+                    });
+
+                    // 添加active类到当前卡片
+                    historyCard.classList.add('active');
+
+                    // 加载历史结果
+                    loadHistoryResult(prediction);
+                });
+
+                // 将卡片添加到容器
+                historyCardsContainer.appendChild(historyCard);
+            });
+
+            // 为所有删除按钮添加事件处理
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // 阻止事件冒泡
+                    const id = this.getAttribute('data-id');
+                    deleteHistoryItem(id);
+                });
+            });
+        }
+
+        // 加载历史预测结果
+        function loadHistoryResult(prediction) {
+            // 显示结果区域，隐藏占位符
+            document.getElementById('results-area').style.display = 'block';
+            document.getElementById('results-placeholder').style.display = 'none';
+
+            // 更新结果标题
+            document.getElementById('results-title').textContent = prediction.title;
+
+            // 更新所有指标图像
+            updateAllMetricImages(prediction);
+
+            // 更新指标表格
+            updateMetricsTable(prediction.evaluations);
+
+            // 初始化轮播图
+            initMetricsCarousel();
+
+            // 更新表单数据，但不提交
+            document.getElementById('symbol').value = prediction.symbol;
+            document.getElementById('target_window').value = prediction.target_window;
+            document.getElementById('start_date').value = prediction.start_date;
+            document.getElementById('end_date').value = prediction.end_date;
+
+            // 显示加载历史结果的提示
+            const statusMessage = document.getElementById('status-message');
+            statusMessage.textContent = `已从历史记录加载 ${prediction.title}`;
+            statusMessage.className = 'alert alert-info';
+            statusMessage.style.display = 'block';
+
+            // 3秒后隐藏提示
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // 删除历史记录项
+        function deleteHistoryItem(id) {
+            // 获取当前历史记录
+            const historyStr = localStorage.getItem('predictionHistory');
+            if (!historyStr) return;
+
+            try {
+                let history = JSON.parse(historyStr);
+
+                // 过滤掉要删除的项
+                history = history.filter(item => item.id !== id);
+
+                // 保存更新后的历史记录
+                localStorage.setItem('predictionHistory', JSON.stringify(history));
+
+                // 更新历史记录显示
+                renderHistoryCards(history);
+            } catch (e) {
+                console.error('删除历史记录时出错:', e);
+            }
+        }
+    </script>
+</body>
+</html>
