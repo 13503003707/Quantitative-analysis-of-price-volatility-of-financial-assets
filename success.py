@@ -634,9 +634,9 @@ class VolatilityPredictionModels:
         self.device = device if device is not None else setup_device()
 
     def create_features(self,
-                       data: pd.DataFrame,
-                       target_col: str,
-                       lag_periods: List[int] = [1, 2, 3, 5, 7, 14, 21]) -> pd.DataFrame:
+                        data: pd.DataFrame,
+                        target_col: str,
+                        lag_periods: List[int] = [1, 2, 3, 5, 7, 14, 21]) -> pd.DataFrame:
         """
         为时间序列数据创建特征，包括滞后特征和技术指标。
 
@@ -671,6 +671,8 @@ class VolatilityPredictionModels:
         avg_gain = gain.rolling(window=14).mean()
         avg_loss = loss.rolling(window=14).mean()
 
+        # 安全处理除法 - 修改1
+        avg_loss = avg_loss.replace(0, 1e-10)  # 避免除以零
         rs = avg_gain / avg_loss
         df['rsi_14'] = 100 - (100 / (1 + rs))
 
@@ -687,22 +689,43 @@ class VolatilityPredictionModels:
             df[f'bb_std_{window}'] = df['Adj Close'].rolling(window=window).std()
             df[f'bb_upper_{window}'] = df[f'bb_middle_{window}'] + 2 * df[f'bb_std_{window}']
             df[f'bb_lower_{window}'] = df[f'bb_middle_{window}'] - 2 * df[f'bb_std_{window}']
-            df[f'bb_width_{window}'] = (df[f'bb_upper_{window}'] - df[f'bb_lower_{window}']) / df[f'bb_middle_{window}']
+
+            # 安全处理布林带宽度 - 修改2
+            middle_band = df[f'bb_middle_{window}'].replace(0, 1e-10)  # 避免除以零
+            df[f'bb_width_{window}'] = (df[f'bb_upper_{window}'] - df[f'bb_lower_{window}']) / middle_band
 
         # 交易量特征（如果有交易量数据）
         if 'Volume' in df.columns:
             df['volume_change'] = df['Volume'].pct_change()
             df['volume_ma_5'] = df['Volume'].rolling(window=5).mean()
             df['volume_ma_10'] = df['Volume'].rolling(window=10).mean()
-            df['volume_ma_ratio'] = df['volume_ma_5'] / df['volume_ma_10']
+
+            # 安全处理成交量比率 - 修改3
+            volume_ma_10_safe = df['volume_ma_10'].replace(0, 1e-10)  # 避免除以零
+            df['volume_ma_ratio'] = df['volume_ma_5'] / volume_ma_10_safe
+
+        # === 添加数据清理步骤 - 修改4 ===
+        # 1. 替换无穷大值为NaN
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+        # 2. 限制极端值范围
+        for column in df.select_dtypes(include=[np.number]).columns:
+            if column != 'Date' and 'Date' not in column:  # 排除日期相关列
+                # 计算列的可靠范围（使用百分位数而非硬编码限制）
+                q1 = df[column].quantile(0.001)
+                q3 = df[column].quantile(0.999)
+                # 使用更宽松的范围裁剪
+                if not np.isnan(q1) and not np.isnan(q3):
+                    iqr = q3 - q1
+                    lower_bound = q1 - 10 * iqr
+                    upper_bound = q3 + 10 * iqr
+                    df[column] = df[column].clip(lower_bound, upper_bound)
 
         # 删除包含NaN值的行
         df = df.dropna()
 
         # 重置索引
         df = df.reset_index()
-
-
 
         return df
 
@@ -746,8 +769,8 @@ class VolatilityPredictionModels:
         return X_train, X_test, y_train, y_test, feature_cols
 
     def scale_data(self,
-                  X_train: np.ndarray,
-                  X_test: np.ndarray) -> Tuple[np.ndarray, np.ndarray, StandardScaler]:
+                   X_train: np.ndarray,
+                   X_test: np.ndarray) -> Tuple[np.ndarray, np.ndarray, StandardScaler]:
         """
         标准化特征数据。
 
@@ -758,6 +781,29 @@ class VolatilityPredictionModels:
         返回:
             Tuple: 标准化后的特征和缩放器
         """
+        # === 添加安全检查 - 修改5 ===
+        # 检查无穷大值
+        if np.isinf(X_train).any() or np.isinf(X_test).any():
+            print("警告：输入数据中存在无穷大值，进行安全替换")
+            # 替换无穷大值为NaN
+            X_train = np.nan_to_num(X_train, nan=0.0, posinf=1e9, neginf=-1e9)
+            X_test = np.nan_to_num(X_test, nan=0.0, posinf=1e9, neginf=-1e9)
+
+        # 检查NaN值
+        if np.isnan(X_train).any() or np.isnan(X_test).any():
+            print("警告：输入数据中存在NaN值，进行安全替换")
+            # 替换NaN值为0
+            X_train = np.nan_to_num(X_train, nan=0.0)
+            X_test = np.nan_to_num(X_test, nan=0.0)
+
+        # 检查数据范围
+        max_val = max(np.max(np.abs(X_train)), np.max(np.abs(X_test)))
+        if max_val > 1e9:
+            print(f"警告：输入数据中存在极大值 ({max_val})，将进行范围限制")
+            # 限制数值范围
+            X_train = np.clip(X_train, -1e9, 1e9)
+            X_test = np.clip(X_test, -1e9, 1e9)
+
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
